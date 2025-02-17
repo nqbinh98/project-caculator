@@ -1,140 +1,148 @@
 // Get btns
 const btnsNumber= document.querySelectorAll('.btn-number');
 const btnsOperate = document.querySelectorAll('.btn-operate');
+const btnChange = document.querySelector('.btn-change');
+const btnPercent = document.querySelector('.btn-percent');
+const btnDelete = document.querySelector('.deleteBtn');
 const equalBtn = document.querySelector('.equal');
 const showValue = document.querySelector('.showValue');
 const clearBtn = document.querySelector('.clearBtn');
-
 // Set initial value
-let numbers = [];
 let calc;
-let saveValue = '';
 let numbA = ''; 
 let numbB = ''; 
 
-// tach ham luu cac so va ham luu cac phep tinh,
-// tach nghe su kien o cac so va cac phep tinh
+function updateDisplay() {
+    showValue.textContent = (numbA || 0) + (calc ? calc : '') + numbB;
+}
+
+function addNumber (value) {
+    if (value === "." && (!calc ? numbA.includes(".") : numbB.includes("."))) {
+        return;
+    }
+    if (value === "." && !numbA) {
+        return;
+    }
+    if (!calc) {
+        numbA = numbA ? numbA + value : value;
+    } else {
+        numbB = numbB ? numbB + value : value;
+    }
+    updateDisplay();
+}
+
+function setOperator (value) {
+    if (!numbA) return;
+    if(numbB) {
+        computeResult()
+    }
+
+    calc = value;
+    updateDisplay();
+}
+
+function computeResult() {
+    if (!numbA || !calc || !numbB) return;
+
+    let result = 0;
+    switch (calc) {
+        case "-":
+            result = sub(numbA, numbB);
+            break;
+        case "+":
+            result = add(numbA, numbB);
+            break;
+        case "*":
+            result = mul(numbA, numbB);
+            break;
+        case "/":
+            if (numbB === 0) {
+                return "Error";
+            }
+            result = divide(numbA, numbB);
+            break;
+`z`
+        default: return;       
+    }
+
+    numbA = result.toString();
+    numbB = ''; 
+    calc = '';
+    updateDisplay();
+    
+
+}
+
+
+btnDelete.onclick = function () {
+
+    if (numbB) {
+        numbB = numbB.slice(0, -1);
+    } else if (calc) {
+        calc = "";
+    } else {
+        numbA = numbA.slice(0, -1);
+    }
+    updateDisplay()
+
+}
+
+btnChange.onclick = function () {
+    
+    if (!calc) {
+        numbA = numbA ? String(-Number(numbA)) : numbA;
+    } else if (numbB) {
+        numbB = String(-Number(numbB));
+    }
+
+    updateDisplay()
+}
+
+btnPercent.onclick = function () {
+    
+    if (!calc) {
+        numbA = String(Number(numbA/100));
+    } else if (numbB) {
+        numbB = String(Number(numbB/100));
+    }
+
+    updateDisplay()
+}
 
 btnsNumber.forEach(btn => btn.onclick = function (e) {
     let value = e.target.textContent;
-    // e.target.style.scale = 0.9
-    operate(value);
-    if (numbA && calc && numbB) {
-        getResult(numbA, numbB, calc)
-    }
+    addNumber(value);
 })
 
 btnsOperate.forEach(btn => btn.onclick = function (e) {
     let value = e.target.textContent;
-    if (saveValue) {
-        showValue.textContent = numbA;        
-    } 
-    operate(value);   
-    // if (numbA && calc && numbB) {
-    //     getResult(numbB, numbB, calc)
-    // }
+    setOperator(value)
 })
 
 clearBtn.addEventListener('click', function () {
     numbA = ''; 
     numbB = ''; 
     calc = '';
-    saveValue = '';
-    showValue.textContent = '';
+    updateDisplay();
 })
 
-equalBtn.onclick = function () {
-    showValue.textContent = saveValue;
-}
-
-function operate (value) {
-
-    if (!isNaN(Number(value))) {
-        if(!calc) { 
-            if (numbA) {
-                numbA += value;
-                showValue.textContent += value;
-            } else {
-                numbA += value;
-                showValue.textContent += numbA;
-            }
-        } else {
-            if (numbB) {
-                numbB += value;
-                console.log(`Number A: ${numbA}`)
-                console.log(`Number B: ${numbB}`)
-                
-                showValue.textContent += value;
-            } else {
-                numbB += value;
-                console.log(`Number A: ${numbA}`)
-                console.log(`Number B: ${numbB}`)
-                showValue.textContent += numbB;
-            }
-        }
-    } else {
-        if(numbA) {
-
-            calc = value;
-        } else {
-            calc = '';
-
-        }
-        console.log(`Calc: ${calc}`);
-
-        showValue.textContent += calc;
-    }
-}
+equalBtn.onclick = computeResult;
 
 // Create function for calculate
 function add (a, b) {
-    let tmpResult = 0;
-    tmpResult = Number(a) + Number(b);
-    return tmpResult;
+    return Number(a) + Number(b);
 }
 function sub (a, b) {
-    let tmpResult = 0;
-    tmpResult = Number(a) - Number(b);
-    return tmpResult;
+    return Number(a) - Number(b);
 }
 function mul (a, b) {
-    let tmpResult = 0;
-    tmpResult = Number(a) * Number(b);
-    return tmpResult;
+    return Number(a) * Number(b);
 }
 function divide (a, b) {
-    let tmpResult = 0;
-    tmpResult = Number(a) / Number(b);
-    return tmpResult;
-}
-
-function getResult (a,b,c) {
-    console.log(`A: ${a}`)
-    console.log(`B: ${b}`)
-    console.log(`C: ${c}`);
-
-    let result = 0;
-
-    if (c === '-') {
-        result = sub(a, b)
+    if(Number(b) === 0) {
+        alert("Error: Can not divide to 0")
+        return "Error"
     }
-    if (c === '+') {
-        result = add(a, b)
-    }
-    if (c === 'x') {
-        result = mul(a, b)
-    }
-    if (c === '/') {
-        result = divide(a, b)
-    }
-    console.log(result)
-    saveValue = result;
-    
-    if (saveValue) {
-        numbA = saveValue; 
-        numbB = ''; 
-        calc = ''
-        
-    }
+    return Number(a) / Number(b);
 }
 
